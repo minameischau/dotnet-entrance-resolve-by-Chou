@@ -18,25 +18,26 @@ namespace TestAVinh.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetBook([FromQuery] int? authorId, [FromQuery] int? publishYear, [FromQuery] int? rating)
+        public async Task<ActionResult> GetBook([FromQuery] GetBooksRequest request)
         {
             _context.Database.EnsureCreated();
-
-            var book = await _context.Books.ToListAsync();
-
-            if (authorId != null)
-            {
-                book = await _context.Books.Where(b => b.AuthorId == authorId).ToListAsync();
-            }
-            if (publishYear != null)
-            {
-                book = await _context.Books.Where(b => b.PublishYear == publishYear).ToListAsync();
-            }
-
-            if (rating != null)
-            {
-                book = await _context.Books.Where(b => b.Rating == rating).ToListAsync();
-            }
+            var book = await _context.Books
+                .Where(v => (request.AuthorId == null ? true : v.AuthorId == request.AuthorId))
+                .Where(v => (request.PublishYear == null ? true : v.PublishYear == request.PublishYear))
+                .Where(v => (request.Rating == null ? true : v.Rating == request.Rating))
+                .Select(
+                    b => new GetListBooks()
+                    {
+                        Id = b.Id,
+                        Title = b.Title,
+                        Topic = b.Topic,
+                        AuthorName = b.Author.Name,
+                        PublishYear = b.PublishYear,
+                        Price = b.Price,
+                        Rating = b.Rating
+                    }
+                )
+                .ToListAsync();
 
             if (book == null)
             {
